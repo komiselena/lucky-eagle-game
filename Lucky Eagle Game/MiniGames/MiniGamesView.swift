@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MiniGamesView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var gameData: GameData
     
     var body: some View {
         GeometryReader{ g in
@@ -50,7 +51,7 @@ struct MiniGamesView: View {
                                         
                                         // Мини-игра: "Угадай число"
                                         NavigationLink {
-                                            GuessTheNumberView()
+                                            GuessTheNumberView(gameData: gameData)
                                         } label: {
                                             Image("achieve")
                                                 .resizable()
@@ -62,7 +63,7 @@ struct MiniGamesView: View {
                                         
                                             // "Найди пару"
                                         NavigationLink {
-                                            MemoryGameView()
+                                            MemoryGameView(gameData: gameData)
                                         } label: {
                                             Image("achieve")
                                                 .resizable()
@@ -74,7 +75,7 @@ struct MiniGamesView: View {
                                     }
                                     HStack(spacing: g.size.width * 0.07){
                                         NavigationLink {
-                                            MemorySequnceGameView()
+                                            MemorySequnceGameView(gameData: gameData)
                                         } label: {
                                             Image("achieve")
                                                 .resizable()
@@ -115,5 +116,5 @@ struct MiniGamesView: View {
 }
 
 #Preview {
-    MiniGamesView()
+    MiniGamesView(gameData: GameData())
 }

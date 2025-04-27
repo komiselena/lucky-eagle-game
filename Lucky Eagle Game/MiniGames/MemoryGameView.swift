@@ -10,7 +10,7 @@ import SwiftUI
 struct MemoryGameView: View {
     @StateObject private var game = MemoryGame(images: ["card1", "card2", "card3", "card4", "card5", "card6"])
     @Environment(\.dismiss) private var dismiss
-    
+    @ObservedObject var gameData: GameData
     @State private var remainingAttempts = 5
     @State private var timeLeft = 45
     @State private var showReward = false
@@ -64,6 +64,11 @@ struct MemoryGameView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: g.size.width * 0.5)
+                                    .onAppear{
+                                        gameData.coins += 100
+
+                                    }
+
                                 HStack(spacing: 8) {
                                     ForEach(game.cards.prefix(6), id: \.id) { card in
                                         Image(card.imageName)
@@ -97,17 +102,19 @@ struct MemoryGameView: View {
                                     Image("Group 8")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                        .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                     HStack{
                                         Image("coin")
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: g.size.width * 0.05)
-                                        Spacer()
+                                        Text("\(gameData.coins)")
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 10)
                                     }
-                                    .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                    .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                 }
-                                
+
                                 Image("Find a match")
                                     .resizable()
                                     .scaledToFit()
@@ -271,5 +278,5 @@ struct FlipEffect: ViewModifier {
 }
 
 #Preview {
-    MemoryGameView()
+    MemoryGameView(gameData: GameData())
 }

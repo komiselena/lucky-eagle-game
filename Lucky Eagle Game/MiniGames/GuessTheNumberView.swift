@@ -9,6 +9,7 @@ import SwiftUI
 
 struct GuessTheNumberView: View {
     @StateObject private var game = GuessTheNumberGame()
+    @ObservedObject var gameData: GameData
     @Environment(\.dismiss) private var dismiss
     @State private var sliderValue: Double = 100
 
@@ -42,15 +43,17 @@ struct GuessTheNumberView: View {
                                 Image("Group 8")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                    .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                 HStack{
                                     Image("coin")
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: g.size.width * 0.05)
-                                    Spacer()
+                                    Text("\(gameData.coins)")
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 10)
                                 }
-                                .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                             }
 
                             if game.bigger{
@@ -71,6 +74,10 @@ struct GuessTheNumberView: View {
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: g.size.width * 0.5)
+                                    .onAppear{
+                                        gameData.coins += 100
+
+                                    }
 
                             }else {
                                 Image("Guess the number")
@@ -145,5 +152,5 @@ struct GuessTheNumberView: View {
 }
 
 #Preview {
-    GuessTheNumberView()
+    GuessTheNumberView(gameData: GameData())
 }

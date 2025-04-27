@@ -20,23 +20,20 @@ class MazeGameScene: SKScene {
         override func didMove(to view: SKView) {
             backgroundColor = .clear
 
-            // Добавляем лабиринт (ваше изображение лабиринта)
-            maze = SKSpriteNode(imageNamed: "maze") // замените на имя вашей картинки лабиринта
+            maze = SKSpriteNode(imageNamed: "maze") 
             maze.position = CGPoint(x: size.width/2, y: size.height/2)
             maze.size = size
             maze.zPosition = 0
             addChild(maze)
             
-            // Добавляем игрок - фиолетовый круг
             let radius: CGFloat = 15
             player = SKShapeNode(circleOfRadius: radius)
             player.fillColor = .purple
             player.strokeColor = .clear
-            player.position = CGPoint(x: 50, y: 50) // стартовая точка (установите по вашему лабиринту)
+            player.position = CGPoint(x: 50, y: 50)
             player.zPosition = 1
             addChild(player)
             
-            // Устанавливаем точку выхода (примерно справа вверху)
             exitPoint = CGPoint(x: size.width - 50, y: size.height - 50)
             
             startTimer()
@@ -52,7 +49,6 @@ class MazeGameScene: SKScene {
                 self.onTimeUpdate?(self.timeLeft)
                 if self.timeLeft <= 0 {
                     self.gameTimer?.invalidate()
-                    // Время вышло - можно добавить логику проигрыша
                 }
             }
         }
@@ -62,7 +58,6 @@ class MazeGameScene: SKScene {
             startTimer()
         }
         
-        // Движение игрока с проверкой выхода за границы сцены и простая проверка выхода из лабиринта
         func movePlayer(direction: Direction) {
             let moveAmount: CGFloat = 30
             var newPosition = player.position
@@ -78,12 +73,9 @@ class MazeGameScene: SKScene {
                 newPosition.x += moveAmount
             }
             
-            // Ограничение по границам сцены
             if frame.contains(newPosition) {
-                // Можно добавить здесь проверку коллизий с лабиринтом (например, по цвету пикселя лабиринта)
                 player.position = newPosition
                 
-                // Проверка достижения выхода (допустим, радиус 30)
                 if player.position.distance(to: exitPoint) < 30 {
                     gameTimer?.invalidate()
                     onGameWon?()
@@ -96,7 +88,6 @@ class MazeGameScene: SKScene {
         }
     }
 
-    // Вспомогательное расширение для вычисления расстояния между точками
     extension CGPoint {
         func distance(to point: CGPoint) -> CGFloat {
             return hypot(self.x - point.x, self.y - point.y)

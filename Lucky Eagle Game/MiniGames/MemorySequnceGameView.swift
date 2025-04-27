@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MemorySequnceGameView: View {
     @StateObject private var viewModel = MemoryGameViewModel()
+    @ObservedObject var gameData: GameData
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -67,6 +68,7 @@ struct MemorySequnceGameView: View {
                                 
                                 Button(action: {
                                     dismiss()
+                                    gameData.coins += 100
                                 }, label: {
                                     Image("Take")
                                         .resizable()
@@ -85,17 +87,19 @@ struct MemorySequnceGameView: View {
                                     Image("Group 8")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                        .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                     HStack{
                                         Image("coin")
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: g.size.width * 0.05)
-                                        Spacer()
+                                        Text("\(gameData.coins)")
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 10)
                                     }
-                                    .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                    .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                 }
-                                
+
                                 
                                 Image("Repeat the sequence")
                                     .resizable()
@@ -149,5 +153,5 @@ struct MemorySequnceGameView: View {
 
 
 #Preview {
-    MemorySequnceGameView()
+    MemorySequnceGameView(gameData: GameData())
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct WinView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var gameViewModel: GameViewModel
+    @ObservedObject var gameData: GameData
 
     var body: some View {
         GeometryReader { g in
@@ -58,7 +59,7 @@ struct WinView: View {
                             Button {
                                 dismiss()
                                 gameViewModel.isGameOver = false
-
+                                gameData.coins += 100
                             } label: {
                                 Image("Menu")
                                     .resizable()
@@ -70,6 +71,8 @@ struct WinView: View {
 
                         Button {
                             gameViewModel.isGameOver = false
+                            gameData.coins += 100
+
 //                            dismiss()
                         } label: {
                             Image("Retry")

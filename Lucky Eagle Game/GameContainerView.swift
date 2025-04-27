@@ -17,7 +17,7 @@ struct GameContainerView: View {
 
     var body: some View {
         if gameViewModel.isGameOver {
-            WinView(gameViewModel: gameViewModel)
+            WinView(gameViewModel: gameViewModel, gameData: gameData)
                 .navigationBarBackButtonHidden()
             } else {
                 GeometryReader { g in

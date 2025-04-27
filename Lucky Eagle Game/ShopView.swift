@@ -128,7 +128,7 @@ struct ShopView: View {
             gameViewModel.eagleSkin = "eagle\(id)"
         } else {
             if gameData.coins >= 100 {
-                gameData.spendCoins(100)
+                gameData.coins -= 100
                 boughtSkinId.append(id)
                 gameViewModel.eagleSkin = "eagle\(id)"
             } else {
@@ -142,7 +142,8 @@ struct ShopView: View {
             gameViewModel.backgroundImage = "loc\(id)"
         } else {
             if gameData.coins >= 100 {
-                gameData.spendCoins(100)
+                gameData.coins -= 100
+
                 boughtLocId.append(id)
                 gameViewModel.backgroundImage = "loc\(id)"
             } else {

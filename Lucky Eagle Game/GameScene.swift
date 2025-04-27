@@ -96,40 +96,37 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         let spawn = SKAction.run {
             self.spawnSmallBird()
         }
-        let wait = SKAction.wait(forDuration: Double.random(in: 5.0...8.0)) // реже, чем враги
+        let wait = SKAction.wait(forDuration: Double.random(in: 5.0...8.0))
         let sequence = SKAction.sequence([spawn, wait])
         run(SKAction.repeatForever(sequence))
     }
     
     func spawnSmallBird() {
-        // Выбираем случайную птицу
         let birdNames = ["smallbird1", "smallbird2", "smallbird3", "smallbird4", "smallbird5"]
         let randomBirdName = birdNames.randomElement()!
         
         let bird = SKSpriteNode(imageNamed: randomBirdName)
         bird.name = randomBirdName
-        bird.setScale(0.7) // Меньше основного орла
+        bird.setScale(0.1)
         bird.zPosition = 5
         
-        // Стартовая позиция: случайная сторона экрана
         let fromLeft = Bool.random()
         let startX = fromLeft ? -50 : size.width + 50
         let startY = CGFloat.random(in: 100...(size.height - 100))
         bird.position = CGPoint(x: startX, y: startY)
         
         bird.physicsBody = SKPhysicsBody(texture: bird.texture!, size: bird.size)
-        bird.physicsBody?.categoryBitMask = PhysicsCategory.bird // Можно завести отдельную категорию smallBird, если нужно
+        bird.physicsBody?.categoryBitMask = PhysicsCategory.bird
         bird.physicsBody?.contactTestBitMask = PhysicsCategory.eagle
         bird.physicsBody?.collisionBitMask = 0
         bird.physicsBody?.isDynamic = true
         
         addChild(bird)
         
-        // Путь полёта: немного вверх/вниз и в сторону
         let dx = fromLeft ? CGFloat.random(in: 300...500) : CGFloat.random(in: -500 ... -300)
         let dy = CGFloat.random(in: -100...100)
         
-        let move = SKAction.moveBy(x: dx, y: dy, duration: 8.0)
+        let move = SKAction.moveBy(x: dx, y: dy, duration: 4.0)
         let remove = SKAction.removeFromParent()
         bird.run(SKAction.sequence([move, remove]))
     }
@@ -137,58 +134,50 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
 
     
     func setupScoreDisplay() {
-        // 1. Картинка с надписью "Score"
         let scoreTitle = SKSpriteNode(imageNamed: "score")
-        scoreTitle.position = CGPoint(x: size.width / 2, y: size.height - 40)
+        scoreTitle.setScale(2.7)
+        scoreTitle.position = CGPoint(x: size.width / 2, y: size.height - scoreTitle.size.height / 2 - 20)
         scoreTitle.zPosition = 100
         addChild(scoreTitle)
         
-        // 2. Картинка "scorebar" (панелька под цифры)
-        let scoreBar1 = SKSpriteNode(imageNamed: "Group 8")
-        scoreBar1.position = CGPoint(x: size.width / 2, y: scoreTitle.position.y - 40)
-        scoreBar1.zPosition = 100
-        addChild(scoreBar1)
-        let scoreBar2 = SKSpriteNode(imageNamed: "coin")
-        scoreBar2.position = CGPoint(x: size.width / 2, y: scoreTitle.position.y - 40)
-        scoreBar2.zPosition = 101
-        addChild(scoreBar2)
-
-        /*
-         ZStack{
-             Image("Group 8")
-                 .resizable()
-                 .scaledToFit()
-                 .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
-             HStack{
-                 Image("coin")
-                     .resizable()
-                     .scaledToFit()
-                     .frame(width: g.size.width * 0.05)
-                 Spacer()
-             }
-             .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
-
-         */
+        let scoreBar = SKSpriteNode(imageNamed: "Group 8")
+        scoreBar.setScale(2.9)
+        scoreBar.position = CGPoint(x: size.width / 2, y: scoreTitle.position.y - scoreTitle.size.height / 2 - scoreBar.size.height / 2 - 3)
+        scoreBar.zPosition = 100
+        addChild(scoreBar)
         
-        // 3. Цифры поверх scorebar
+        let coin = SKSpriteNode(imageNamed: "coin")
+        coin.setScale(2.8)
+        coin.position = CGPoint(
+            x: scoreBar.position.x - scoreBar.size.width * 0.315,
+            y: scoreBar.position.y
+        )
+        coin.zPosition = 101
+        addChild(coin)
+        
         scoreLabel = SKLabelNode(fontNamed: "HelveticaNeue-Bold")
-        scoreLabel.fontSize = 28
+        scoreLabel.fontSize = 20
         scoreLabel.fontColor = .white
-        scoreLabel.position = CGPoint(x: size.width / 2, y: scoreBar1.position.y - 5)
-        scoreLabel.zPosition = 102 // Чтобы быть поверх scorebar
         scoreLabel.text = "\(gameData?.coins ?? 0)"
+        scoreLabel.verticalAlignmentMode = .center
+        scoreLabel.horizontalAlignmentMode = .left
+        scoreLabel.position = CGPoint(
+            x: coin.position.x + coin.size.width / 2 + 10,
+            y: coin.position.y
+        )
+        scoreLabel.zPosition = 101
         addChild(scoreLabel)
     }
 
     
     func setupHealthBar() {
-        healthBarBackground = SKSpriteNode(color: UIColor.brown, size: CGSize(width: 220, height: 30))
-        healthBarBackground.position = CGPoint(x: size.width / 2, y: size.height - 50)
+        healthBarBackground = SKSpriteNode(color: UIColor.brown, size: CGSize(width: 180, height: 20))
+        healthBarBackground.position = CGPoint(x: size.width / 2, y: size.height - 90)
         healthBarBackground.zPosition = 50
         healthBarBackground.cornerRadius = 15
         addChild(healthBarBackground)
         
-        healthBar = SKSpriteNode(color: UIColor.red, size: CGSize(width: 200, height: 20))
+        healthBar = SKSpriteNode(color: UIColor.red, size: CGSize(width: 165, height: 15))
         healthBar.anchorPoint = CGPoint(x: 0.0, y: 0.5)
         healthBar.position = CGPoint(x: healthBarBackground.position.x - 100, y: healthBarBackground.position.y)
         healthBar.zPosition = 51
@@ -205,7 +194,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func updateHealthBar() {
-        let maxWidth: CGFloat = 220
+        let maxWidth: CGFloat = 180
         let newWidth = max(0, maxWidth * health)
         
         let resize = SKAction.resize(toWidth: newWidth, duration: 0.3)
@@ -284,7 +273,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         bird.zPosition = 5
 
         bird.physicsBody = SKPhysicsBody(texture: bird.texture!, size: bird.size)
-        bird.physicsBody?.categoryBitMask = PhysicsCategory.bird
+        bird.physicsBody?.categoryBitMask = PhysicsCategory.enemyBird
         bird.physicsBody?.contactTestBitMask = PhysicsCategory.eagle
         bird.physicsBody?.collisionBitMask = 0
         bird.physicsBody?.isDynamic = true
@@ -334,36 +323,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         bag.run(SKAction.sequence([bagMove, bagRemove]))
     }
 
-//    func didBegin(_ contact: SKPhysicsContact) {
-//        
-//        let firstBody: SKPhysicsBody
-//        let secondBody: SKPhysicsBody
-//
-//        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
-//            firstBody = contact.bodyA
-//            secondBody = contact.bodyB
-//        } else {
-//            firstBody = contact.bodyB
-//            secondBody = contact.bodyA
-//        }
-//
-//        if firstBody.categoryBitMask == PhysicsCategory.eagle &&
-//            secondBody.categoryBitMask == PhysicsCategory.coin {
-//            score += 1
-//            gameData?.coins += 1
-//            scoreLabel.text = "Счёт: \(gameData?.coins ?? 0)"
-//            secondBody.node?.removeFromParent()
-//        }
-//                    
-//
-//        if firstBody.categoryBitMask == PhysicsCategory.eagle &&
-//            (secondBody.categoryBitMask == PhysicsCategory.arrow || secondBody.categoryBitMask == PhysicsCategory.bird) {
-//            reduceHealth()
-//            secondBody.node?.removeFromParent()
-//        }
-//    }
     func didBegin(_ contact: SKPhysicsContact) {
-//        guard let nodeA = contact.bodyA, let nodeB = contact.bodyB else { return }
         
         let firstBody: SKPhysicsBody
         let secondBody: SKPhysicsBody
@@ -376,32 +336,29 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             secondBody = contact.bodyA
         }
         
-        if firstBody.node == eagle {
-            if secondBody.node?.name == "enemyBird" || secondBody.node?.name == "arrow" {
-                reduceHealth()
-                secondBody.node?.removeFromParent()
-            } else if secondBody.node?.name?.contains("smallbird") == true {
-                // Если поймали smallbird
-                score += 5 // +10 очков за мелкую птицу
-                scoreLabel.text = "\(score)"
-                
+        if firstBody.categoryBitMask == PhysicsCategory.eagle {
+            if secondBody.node?.name?.contains("smallbird") == true {
+                gameData?.coins += 5
+                scoreLabel.text = "\(gameData?.coins ?? 0)"
                 if secondBody.node?.name == "smallbird2" {
-                    health = min(1.0, health + 0.2) // Прибавляем здоровье за smallbird2
+                    health = min(1.0, health + 0.2)
                 }
-                
                 secondBody.node?.removeFromParent()
-            } else if secondBody.node?.name == "coin" {
-                score += 1
-                scoreLabel.text = "\(score)"
-                secondBody.node?.removeFromParent()
-                
             }
         }
         if firstBody.categoryBitMask == PhysicsCategory.eagle &&
-            (secondBody.categoryBitMask == PhysicsCategory.arrow || secondBody.categoryBitMask == PhysicsCategory.bird) {
+            (secondBody.categoryBitMask == PhysicsCategory.arrow || secondBody.categoryBitMask == PhysicsCategory.enemyBird) {
             reduceHealth()
             secondBody.node?.removeFromParent()
         }
+        if firstBody.categoryBitMask == PhysicsCategory.eagle &&
+            secondBody.categoryBitMask == PhysicsCategory.coin {
+            gameData?.coins += 1
+            score += 1
+            scoreLabel.text = "\(gameData?.coins ?? 0)"
+            secondBody.node?.removeFromParent()
+        }
+        
         
     }
     
@@ -412,6 +369,8 @@ enum PhysicsCategory {
     static let arrow: UInt32 = 0x1 << 1
     static let bird: UInt32 = 0x1 << 2
     static let coin: UInt32 = 0x1 << 3
+    static let enemyBird: UInt32 = 0x1 << 4
+
 }
 
 extension SKSpriteNode {

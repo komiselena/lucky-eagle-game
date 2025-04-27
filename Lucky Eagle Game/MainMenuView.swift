@@ -21,7 +21,7 @@ struct MainMenuView: View {
                         .ignoresSafeArea()
                     VStack{
                         HStack(alignment: .top){
-                            NavigationLink(destination: MiniGamesView()) {
+                            NavigationLink(destination: MiniGamesView(gameData: gameData)) {
                                 Image("btn_minigames")
                                     .resizable()
                                     .frame(width: g.size.width * 0.08, height: g.size.width * 0.08)
@@ -46,10 +46,9 @@ struct MainMenuView: View {
                                             .resizable()
                                             .scaledToFit()
                                             .frame(width: g.size.width * 0.05)
-                                        Spacer()
                                         Text("\(gameData.coins)")
                                             .foregroundStyle(.white)
-                                            .padding(15)
+                                            .padding(.horizontal, 10)
                                     }
                                     .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                 }
