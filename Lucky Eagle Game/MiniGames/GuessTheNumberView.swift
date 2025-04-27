@@ -8,8 +8,139 @@
 import SwiftUI
 
 struct GuessTheNumberView: View {
+    @StateObject private var game = GuessTheNumberGame()
+    @Environment(\.dismiss) private var dismiss
+    @State private var sliderValue: Double = 100
+
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        GeometryReader { g in
+            ZStack{
+                Image("bg_main")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                VStack(spacing: 0){
+                    HStack{
+                        Spacer()
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image("crossButton")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: g.size.width * 0.1)
+
+                        }
+
+                    }
+                    ZStack{
+                        BackgroundRectangle()
+                            .scaleEffect(2.8)
+                        
+                        VStack(spacing: 10) {
+                            ZStack{
+                                Image("Group 8")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                                HStack{
+                                    Image("coin")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.05)
+                                    Spacer()
+                                }
+                                .frame(width: g.size.width * 0.13, height: g.size.height * 0.07)
+                            }
+
+                            if game.bigger{
+                                Image("Bigger")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.4)
+
+//                                    .scaleEffect(0.7)
+                            } else if game.smaller{
+                                Image("Smaller")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.4)
+
+                            }else if game.isWon {
+                                Image("Number guessed")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.5)
+
+                            }else {
+                                Image("Guess the number")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.5)
+
+//                                    .scaleEffect(0.7)
+
+                            }
+                            VStack(spacing: 10) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .foregroundStyle(game.bigger || game.smaller ? .red.opacity(0.8) : Color.brown1)
+                                        .frame(width: g.size.width * 0.2, height: g.size.height * 0.1)
+                                    Text("\(Int(sliderValue))")
+                                        .font(.largeTitle)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                }
+                                
+                                Slider(value: $sliderValue, in: 1...999, step: 1)
+                                    .accentColor(Color("brown1"))
+                                    .frame(width: g.size.width * 0.3, height: g.size.height * 0.04)
+                            }
+
+//                            Spacer()
+                            Button(action: {
+                                game.guess = String(Int(sliderValue))
+                                game.checkGuess()
+
+                            }) {
+                                if game.smaller || game.bigger {
+                                    Image("Retry")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.18)
+                                    
+                                } else if game.isWon {
+                                    Image("Group 10")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.2)
+                                    
+                                } else {
+                                    Image("guess")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.18)
+                                    
+                                }
+                                
+                            }
+                            .padding(.horizontal)
+//                            .frame(maxWidth: 300)
+                            
+                            Spacer()
+                        }
+                        
+//                        .frame(height: g.size.height * 0.6)
+
+                        
+//                        .padding()
+                    }
+                }
+                .frame(height: g.size.height * 0.8)
+                .padding(.bottom, g.size.height * 0.3)
+            }
+        }
+        .navigationBarBackButtonHidden()
     }
 }
 
