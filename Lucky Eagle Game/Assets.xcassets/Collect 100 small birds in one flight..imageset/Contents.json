@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "Collect 100 small birds in one flight..png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Collect 100 small birds in one flight. 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "Collect 100 small birds in one flight. 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

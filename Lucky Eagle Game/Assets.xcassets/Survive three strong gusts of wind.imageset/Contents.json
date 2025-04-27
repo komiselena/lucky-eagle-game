@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "Survive three strong gusts of wind.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Survive three strong gusts of wind 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "Survive three strong gusts of wind 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

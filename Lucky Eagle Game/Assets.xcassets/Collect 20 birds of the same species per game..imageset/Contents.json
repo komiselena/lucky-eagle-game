@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "Collect 20 birds of the same species per game..png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Collect 20 birds of the same species per game. 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "Collect 20 birds of the same species per game. 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
