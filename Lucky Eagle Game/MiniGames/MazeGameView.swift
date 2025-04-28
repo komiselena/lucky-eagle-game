@@ -8,46 +8,31 @@
 import SwiftUI
 import SpriteKit
 
+
+#Preview {
+    MazeGameView(gameData: GameData())
+}
+
+
 struct MazeGameView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var timeLeft: Int = 60
-    @State private var gameWon: Bool = false
-    @State private var coins: Int = 0
-    
-    private var scene: MazeGameScene {
-        let scene = MazeGameScene()
-        scene.size = CGSize(width: 300, height: 400)
-        scene.scaleMode = .aspectFit
-        
-        scene.onTimeUpdate = { time in
-            DispatchQueue.main.async {
-                self.timeLeft = time
-            }
-        }
-        
-        scene.onGameWon = {
-            DispatchQueue.main.async {
-                self.gameWon = true
-            }
-        }
-        
-        return scene
-    }
 
+    @State private var scene = MazeGameScene(size: CGSize(width: 196, height: 196))
+    @ObservedObject var gameData: GameData
+    @State private var timeLeft = 60
+    @State private var timer: Timer?
+    @State private var showWin = false
+    @State private var coins = 0
+    
     var body: some View {
         GeometryReader { g in
-            ZStack {
+            ZStack{
                 Image("bg_main")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                
-                BackgroundRectangle()
-                    .scaleEffect(2.8)
-
-
-                VStack {
-                    HStack {
+                VStack(spacing: 0){
+                    HStack{
                         Spacer()
                         Button {
                             dismiss()
@@ -55,106 +40,134 @@ struct MazeGameView: View {
                             Image("crossButton")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: g.size.width * 0.15)
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top)
-
-                    // Таймер
-                    Text("Time: \(timeLeft)")
-                        .font(.title2)
-                        .padding(.bottom)
-                        .foregroundColor(.white)
-
-                    ZStack(alignment: .topTrailing) {
-                        SpriteView(scene: scene)
-                            .frame(width: 300, height: 400)
-                            .cornerRadius(10)
-                            .shadow(radius: 5)
-                        
-                    }
-
-                    // Кнопки управления
-                    
-                    HStack(spacing: 20) {
-//                        SpriteView(scene: scene)
-//                            .frame(width: g.size.width * 0.6, height: g.size.width * 0.6)
-//                            .background(Color.clear)
-//                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                        
-                        VStack(spacing: 20) {
-                            Button(action: {
-                                scene.movePlayer(direction: .up)
-                            }) {
-                                Image("mazeArrowControl")
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                            }
+                                .frame(width: g.size.width * 0.12)
                             
-                            HStack(spacing: 20) {
-                                Button(action: {
-                                    scene.movePlayer(direction: .left)
-                                }) {
-                                    Image("mazeArrowControl")
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .rotationEffect(.degrees(-90))
-                                }
-                                Button(action: {
-                                    scene.movePlayer(direction: .down)
-                                }) {
-                                    Image("mazeArrowControl")
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .rotationEffect(.degrees(90))
-                                }
+                        }
 
-                            }
-                            
-                            Button(action: {
-                                scene.movePlayer(direction: .right)
-                            }) {
-                                Image("mazeArrowControl")
+                    }
+                    .frame(width: g.size.width)
+
+                    ZStack(alignment: .center){
+                        BackgroundRectangle()
+                            .frame(width: g.size.width * 1, height: g.size.height * 0.85)
+                        VStack{
+                            if showWin{
+                                Image("Good JOb You made it the finish lne")
                                     .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .rotationEffect(.degrees(180))
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.4)
+
+                            } else{
+//                                SpriteView(scene: scene)
+                                ZStack{
+                                    Image("Group 8")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
+                                    HStack{
+                                        Image("coin")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: g.size.width * 0.05)
+                                        Text("\(gameData.coins)")
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 10)
+                                    }
+                                    .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
+                                }
+                                
+                                Image("Find way to the cup")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.4)
+                                
+                                HStack(spacing: 60) {
+                                    SpriteView(scene: scene)
+                                        .frame(width: g.size.width * 0.2, height: g.size.width * 0.2)
+                                        .border(Color.black)
+                                    
+                                    VStack (spacing: 0){
+                                        Text("TIME: \(timeLeft)")
+                                            .font(.headline)
+                                            .foregroundStyle(.white)
+                                            .padding(10)
+                                        
+                                        
+                                        Button(action: { scene.movePlayer(dx: 0, dy: scene.moveStep) }) {
+                                            Image("mazeArrowControl")
+                                                .resizable()
+                                                .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
+                                        }
+                                        HStack(spacing: 0) {
+                                            Button(action: { scene.movePlayer(dx: -scene.moveStep, dy: 0) }) {
+                                                Image("mazeArrowControl")
+                                                    .resizable()
+                                                    .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
+                                                    .rotationEffect(.degrees(-90))
+                                            }
+                                            Button(action: {  }) {
+                                                Image("mazeArrowControl")
+                                                    .resizable()
+                                                    .opacity(0.0)
+                                                    .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
+                                                    .rotationEffect(.degrees(-90))
+                                            }
+                                            
+                                            Button(action: { scene.movePlayer(dx: scene.moveStep, dy: 0) }) {
+                                                Image("mazeArrowControl")
+                                                    .resizable()
+                                                    .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
+                                                    .rotationEffect(.degrees(90))
+                                            }
+                                        }
+                                        Button(action: { scene.movePlayer(dx: 0, dy: -scene.moveStep) }) {
+                                            Image("mazeArrowControl")
+                                                .resizable()
+                                                .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
+                                                .rotationEffect(.degrees(180))
+                                        }
+                                    }
+                                    .padding(.leading)
+                                }
                             }
                         }
+
                     }
-                    .padding()
+                    .frame(height: g.size.height * 0.8)
 
-
-//                    Button(action: restartGame) {
-//                        Image("Retry")
-//                            .resizable()
-//                            .frame(width: 60, height: 60)
-//                            .padding()
-//                    }
                 }
-                .frame(height: g.size.height * 0.8)
                 .padding(.bottom, g.size.height * 0.3)
+            }
+            .onAppear {
+                startTimer()
+                scene.onGameWon = {
+                    timer?.invalidate()
+                    showWin = true
+                }
+            }
 
+        }
+        .navigationBarBackButtonHidden()
+
+        
+        
+    }
+    
+    func resetGame() {
+//        scene.resetGame()
+        timeLeft = 60
+        showWin = false
+        startTimer()
+    }
+    
+    func startTimer() {
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if timeLeft > 0 {
+                timeLeft -= 1
+            } else {
+                timer?.invalidate()
             }
         }
-//        .onAppear(perform: startTimer)
-        .navigationBarBackButtonHidden()
     }
-
-
-//    private func restartGame() {
-//        scene = MazeGameScene()
-//        startTimer()
-//    }
-//
-//    private func move(_ vector: CGVector) {
-//        scene.movePlayer(by: vector)
-//    }
-}
-
-
-
-
-#Preview {
-    MazeGameView()
 }

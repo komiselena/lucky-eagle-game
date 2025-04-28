@@ -17,13 +17,14 @@ struct MemoryGameView: View {
     @State private var timer: Timer?
 
     var body: some View {
+        
         GeometryReader { g in
-            ZStack {
+            ZStack{
                 Image("bg_main")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                VStack(spacing: -10){
+                VStack(spacing: 0){
                     HStack{
                         Spacer()
                         Button {
@@ -32,14 +33,18 @@ struct MemoryGameView: View {
                             Image("crossButton")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: g.size.width * 0.15)
+                                .frame(width: g.size.width * 0.12)
                             
                         }
-                        
+
                     }
-                    ZStack{
+                    .frame(width: g.size.width )
+
+                    ZStack(alignment: .center){
                         BackgroundRectangle()
-                            .scaleEffect(2.8)
+                            .frame(width: g.size.width * 1, height: g.size.height * 0.85)
+
+//                            .scaleEffect(2.8)
                         
                         VStack {
                             if game.lostMatch {
@@ -114,7 +119,7 @@ struct MemoryGameView: View {
                                     }
                                     .frame(width: g.size.width * 0.15, height: g.size.height * 0.09)
                                 }
-
+                                
                                 Image("Find a match")
                                     .resizable()
                                     .scaledToFit()
@@ -149,19 +154,26 @@ struct MemoryGameView: View {
                                             .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
                                     }
                                 }
+                                .frame(width: g.size.width * 0.6)
+
+
+                                
                             }
+                            Spacer()
                         }
+                        .padding(.top, g.size.height * 0.1)
+
                     }
-                    .frame(width: g.size.width * 0.6 ,height: g.size.height * 0.8)
-                    .padding(.bottom, g.size.height * 0.3)
-
-                    .onAppear(perform: startTimer)
-                    .onDisappear(perform: stopTimer)
                 }
-
+                .frame(height: g.size.height * 0.8)
+                .padding(.bottom, g.size.height * 0.3)
             }
+            .onAppear(perform: startTimer)
+            .onDisappear(perform: stopTimer)
+
         }
         .navigationBarBackButtonHidden()
+
 
     }
     

@@ -86,7 +86,7 @@ struct MiniGamesView: View {
 
                                             // "Лабиринт"
                                             NavigationLink {
-                                                MazeGameView()
+                                                MazeGameView(gameData: gameData)
                                             } label: {
                                                 Image("achieve")
                                                     .resizable()

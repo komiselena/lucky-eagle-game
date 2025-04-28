@@ -38,6 +38,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
                 // Вся остальная логика приложения, которая должна быть выполнена до загрузки главного View
                 // должна быть выполнена здесь. Например, инициализация аудио
+//                MusicManager.shared.playBackgroundMusic()
+
                 
 
                 ///////////////////////////////

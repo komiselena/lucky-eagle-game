@@ -28,7 +28,8 @@ struct SettingsView: View {
                                 .frame(width: g.size.width * 0.12)
                             
                         }
-                        
+                        .frame(width: g.size.width * 0.8)
+
                     }
                     
                     ZStack(alignment: .center){

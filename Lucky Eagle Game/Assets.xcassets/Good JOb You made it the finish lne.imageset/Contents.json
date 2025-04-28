@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "Good JOb You made it the finish lne.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Good JOb You made it the finish lne 1.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "Good JOb You made it the finish lne 2.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

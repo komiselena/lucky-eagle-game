@@ -29,14 +29,19 @@ struct GuessTheNumberView: View {
                             Image("crossButton")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: g.size.width * 0.1)
-
+                                .frame(width: g.size.width * 0.12)
+                            
                         }
 
                     }
-                    ZStack{
+                    .frame(width: g.size.width)
+
+                    ZStack(alignment: .center){
                         BackgroundRectangle()
-                            .scaleEffect(2.8)
+                            .frame(width: g.size.width * 1, height: g.size.height * 0.85)
+
+                        
+//                            .scaleEffect(2.8)
                         
                         VStack(spacing: 10) {
                             ZStack{
@@ -136,6 +141,10 @@ struct GuessTheNumberView: View {
                             
                             Spacer()
                         }
+                        .padding(.top, g.size.height * 0.1)
+
+//                        .frame(width: g.size.width, height: g.size.height * 0.8)
+
                         
 //                        .frame(height: g.size.height * 0.6)
 

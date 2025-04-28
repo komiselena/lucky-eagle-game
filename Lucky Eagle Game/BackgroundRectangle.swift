@@ -9,12 +9,23 @@ import SwiftUI
 
 struct BackgroundRectangle: View {
     var body: some View {
-            ZStack(alignment: .center){
-                Image("miniGames")
-
-                Image("rec")
-
+        
+        GeometryReader{ g in
+            HStack{
+                Spacer()
+                ZStack(alignment: .center){
+                    Image("miniGames")
+                        .resizable()
+                        .frame(width: g.size.width * 0.8)
+                    
+                    Image("rec")
+                        .resizable()
+                        .frame(width: g.size.width * 0.7, height: g.size.height * 0.8)
+                    
+                }
+                Spacer()
             }
+        }
 
     }
 }
