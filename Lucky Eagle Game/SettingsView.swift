@@ -28,9 +28,10 @@ struct SettingsView: View {
                                 .frame(width: g.size.width * 0.12)
                             
                         }
-                        .frame(width: g.size.width * 0.8)
 
                     }
+                    .frame(width: g.size.width)
+
                     
                     ZStack(alignment: .center){
                         Image("Settings")

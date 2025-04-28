@@ -21,7 +21,7 @@ struct MazeGameView: View {
     @ObservedObject var gameData: GameData
     @State private var timeLeft = 90
     @State private var timer: Timer?
-    @State private var showWin = true
+    @State private var showWin = false
     @State private var coins = 0
     
     var body: some View {
@@ -45,6 +45,7 @@ struct MazeGameView: View {
                         }
 
                     }
+                    
                     .frame(width: g.size.width)
 
                     ZStack(alignment: .center){
@@ -56,7 +57,7 @@ struct MazeGameView: View {
                                 Image("Good JOb You made it the finish lne")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.4)
+                                    .frame(width: g.size.width * 0.35)
                                 
                                     Image("Group 10")
                                         .resizable()
@@ -66,7 +67,11 @@ struct MazeGameView: View {
                                 Image("Take")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.3)
+                                    .frame(width: g.size.width * 0.2)
+                                    .onTapGesture {
+                                        gameData.coins += 20
+                                        dismiss()
+                                    }
 
                                 }
                                 
@@ -160,6 +165,11 @@ struct MazeGameView: View {
                     showWin = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         gameData.coins += 20
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                            showWin = false
+
+                        }
+
                     }
                 }
             }

@@ -142,14 +142,6 @@ struct GuessTheNumberView: View {
                             Spacer()
                         }
                         .padding(.top, g.size.height * 0.1)
-
-//                        .frame(width: g.size.width, height: g.size.height * 0.8)
-
-                        
-//                        .frame(height: g.size.height * 0.6)
-
-                        
-//                        .padding()
                     }
                 }
                 .frame(height: g.size.height * 0.8)

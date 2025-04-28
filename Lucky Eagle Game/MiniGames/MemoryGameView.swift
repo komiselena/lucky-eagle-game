@@ -38,6 +38,7 @@ struct MemoryGameView: View {
                         }
 
                     }
+                    
                     .frame(width: g.size.width )
 
                     ZStack(alignment: .center){

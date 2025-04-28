@@ -59,7 +59,7 @@ struct AchievementsView: View {
                         }
                         
                     }
-                    .frame(width: g.size.width * 0.8)
+                    .frame(width: g.size.width )
                     
                     
                     

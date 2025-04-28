@@ -34,6 +34,7 @@ struct MemorySequnceGameView: View {
                         }
 
                     }
+                    
                     .frame(width: g.size.width )
 
                     ZStack(alignment: .center){
