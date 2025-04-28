@@ -16,14 +16,15 @@ class MazeGameScene: SKScene {
     private var mazeNode: SKSpriteNode!
     private var playerNode: SKShapeNode!
     private var mazeCGImage: CGImage?
-    private let playerRadius: CGFloat = 7
-    let moveStep: CGFloat = 7
-    private let startPoint = CGPoint(x: 170, y: 170) // поставь на праввый верхний угол
-    private let exitPoint = CGPoint(x: 98, y: 98) // середина лабиринта должна быть
+    private var prizeNode: SKSpriteNode!
+    private let playerRadius: CGFloat = 3
+    let moveStep: CGFloat = 3
+    private let startPoint = CGPoint(x: 186, y: 186) // поставь на праввый верхний угол
+    private let exitPoint = CGPoint(x: 100, y: 100) // середина лабиринта должна быть
     var onGameWon: (() -> Void)?
     
     override func didMove(to view: SKView) {
-        backgroundColor = .clear
+        backgroundColor = .brown2
         
         // Добавляем лабиринт
         mazeNode = SKSpriteNode(imageNamed: "maze") // имя вашей картинки
@@ -36,10 +37,14 @@ class MazeGameScene: SKScene {
         if let img = UIImage(named: "maze")?.cgImage {
             mazeCGImage = img
         }
-        
+        prizeNode = SKSpriteNode(imageNamed: "prize")
+        prizeNode.position = CGPoint(x: 100, y: 100)
+        prizeNode.size = CGSize(width: 20, height: 20)
+        mazeNode.addChild(prizeNode)
+
         // Добавляем игрока
         playerNode = SKShapeNode(circleOfRadius: playerRadius)
-        playerNode.fillColor = .purple
+        playerNode.fillColor = .purple1
         playerNode.strokeColor = .clear
         playerNode.position = startPoint
         mazeNode.addChild(playerNode)
@@ -50,31 +55,70 @@ class MazeGameScene: SKScene {
     }
     
     func movePlayer(dx: CGFloat, dy: CGFloat) {
+        #if DEBUG
+        print("Попытка движения: dx=\(dx), dy=\(dy)")
+        #endif
+        
         let newPos = CGPoint(x: playerNode.position.x + dx, y: playerNode.position.y + dy)
         
         // Проверка выхода за пределы лабиринта
-        guard mazeNode.frame.contains(newPos) else { return }
+        guard mazeNode.frame.contains(newPos) else {
+            #if DEBUG
+            print("Выход за пределы лабиринта")
+            #endif
+            return
+        }
         
-        // Проверка по четырём сторонам окружности игрока
+        // Проверка центра шарика
+        if isWall(at: newPos) {
+            #if DEBUG
+            print("Столкновение со стеной в центре шарика")
+            #endif
+            return // Если центр шарика на стене - не двигаем
+        }
+        
+        // Проверка по 12 точкам вокруг окружности игрока
         let offsets: [CGPoint] = [
-            CGPoint(x: playerRadius, y: 0),   // справа
-            CGPoint(x: -playerRadius, y: 0),  // слева
-            CGPoint(x: 0, y: playerRadius),   // сверху
-            CGPoint(x: 0, y: -playerRadius)   // снизу
+            // Основные направления
+            CGPoint(x: playerRadius, y: 0),                // справа
+            CGPoint(x: -playerRadius, y: 0),               // слева
+            CGPoint(x: 0, y: playerRadius),                // сверху
+            CGPoint(x: 0, y: -playerRadius),               // снизу
+            
+            // Диагональные направления
+            CGPoint(x: playerRadius * 0.7, y: playerRadius * 0.7),    // справа-сверху
+            CGPoint(x: -playerRadius * 0.7, y: playerRadius * 0.7),   // слева-сверху
+            CGPoint(x: playerRadius * 0.7, y: -playerRadius * 0.7),   // справа-снизу
+            CGPoint(x: -playerRadius * 0.7, y: -playerRadius * 0.7),  // слева-снизу
+            
+            // Дополнительные точки для более точной проверки
+            CGPoint(x: playerRadius * 0.4, y: playerRadius * 0.9),    // почти сверху
+            CGPoint(x: playerRadius * 0.9, y: playerRadius * 0.4),    // почти справа
+            CGPoint(x: -playerRadius * 0.4, y: -playerRadius * 0.9),  // почти снизу
+            CGPoint(x: -playerRadius * 0.9, y: -playerRadius * 0.4)   // почти слева
         ]
         
         for offset in offsets {
             let checkPoint = CGPoint(x: newPos.x + offset.x, y: newPos.y + offset.y)
             if isWall(at: checkPoint) {
+                #if DEBUG
+                print("Столкновение со стеной в точке: \(checkPoint)")
+                #endif
                 return  // столкновение со стеной — не двигаем игрока
             }
         }
         
         // Если всё ок — двигаем игрока
+        #if DEBUG
+        print("Движение разрешено, новая позиция: \(newPos)")
+        #endif
         playerNode.position = newPos
         
         // Проверка победы
         if hypot(newPos.x - exitPoint.x, newPos.y - exitPoint.y) < playerRadius * 2 {
+            #if DEBUG
+            print("Достигнут выход!")
+            #endif
             onGameWon?()
         }
     }
@@ -88,30 +132,55 @@ class MazeGameScene: SKScene {
         let imgX = Int(point.x * scaleX)
         let imgY = Int((mazeNode.size.height - point.y) * scaleY)
         
-        print("Проверяю точку в игре:", point, "-> пиксель:", imgX, imgY)
+        #if DEBUG
+        print("Проверка точки: игровые координаты (\(point.x), \(point.y)), пиксельные координаты (\(imgX), \(imgY))")
+        #endif
         
+        // Проверка границ изображения
         guard imgX >= 0, imgX < mazeCGImage.width, imgY >= 0, imgY < mazeCGImage.height else {
-            print("Выход за границы")
-            return true
+            return true // Если точка вне изображения - считаем это стеной
         }
         
-        guard let provider = mazeCGImage.dataProvider else {
-            print("Нет провайдера")
-            return true
+        // Прямой доступ к данным пикселя
+        guard let dataProvider = mazeCGImage.dataProvider,
+              let pixelData = dataProvider.data,
+              let data = CFDataGetBytePtr(pixelData) else {
+            return true // Если не удалось получить данные - считаем стеной
         }
         
-        let pixelData = provider.data
-        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        // Получаем информацию о формате изображения
         let bytesPerPixel = mazeCGImage.bitsPerPixel / 8
-        let pixelIndex = (mazeCGImage.width * imgY + imgX) * bytesPerPixel
-
+        let bytesPerRow = mazeCGImage.bytesPerRow
+        
+        // Вычисляем индекс пикселя с учетом bytesPerRow
+        let pixelIndex = bytesPerRow * imgY + imgX * bytesPerPixel
+        
+        // Проверка выхода за границы данных
+        let totalBytes = CFDataGetLength(pixelData)
+        guard pixelIndex >= 0, pixelIndex + 2 < totalBytes else {
+            #if DEBUG
+            print("Предотвращен выход за границы массива данных")
+            #endif
+            return true // Защита от выхода за границы массива
+        }
+        
+        // Извлекаем компоненты цвета
         let r = CGFloat(data[pixelIndex]) / 255.0
         let g = CGFloat(data[pixelIndex + 1]) / 255.0
         let b = CGFloat(data[pixelIndex + 2]) / 255.0
         
-        print("Цвет:", r, g, b)
+        #if DEBUG
+        print("Цвет пикселя: R=\(r), G=\(g), B=\(b)")
+        #endif
         
-        return r > 0.9 && g > 0.9 && b > 0.9
+        // Определяем стену как белый цвет (r, g, b > 0.7)
+        let isWall = (r > 0.7 && g > 0.7 && b > 0.7)
+        
+        #if DEBUG
+        print("Это \(isWall ? "стена" : "проход")")
+        #endif
+        
+        return isWall
     }
 }
 
@@ -119,21 +188,35 @@ class MazeGameScene: SKScene {
 extension CGImage {
     func colorAt(x: Int, y: Int) -> UIColor? {
         guard x >= 0, x < width, y >= 0, y < height else { return nil }
-        let colorSpace = CGColorSpaceCreateDeviceRGB()
-        var pixelData = [UInt8](repeating: 0, count: 4)
-        guard let ctx = CGContext(data: &pixelData,
-                                  width: 1, height: 1,
-                                  bitsPerComponent: 8,
-                                  bytesPerRow: 4,
-                                  space: colorSpace,
-                                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        else { return nil }
-        ctx.translateBy(x: CGFloat(-x), y: CGFloat(-y))
-        ctx.draw(self, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return UIColor(red: CGFloat(pixelData[0])/255,
-                       green: CGFloat(pixelData[1])/255,
-                       blue: CGFloat(pixelData[2])/255,
-                       alpha: CGFloat(pixelData[3])/255)
+        
+        let bytesPerRow = 4
+        let dataSize = bytesPerRow * 1 // всего 1 пиксель
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+        
+        // Создаем буфер для данных пикселя
+        var pixelData = [UInt8](repeating: 0, count: dataSize)
+        
+        // Создаем контекст размером 1x1 для извлечения цвета пикселя
+        guard let context = CGContext(data: &pixelData,
+                                    width: 1, height: 1,
+                                    bitsPerComponent: 8,
+                                    bytesPerRow: bytesPerRow,
+                                    space: CGColorSpaceCreateDeviceRGB(),
+                                    bitmapInfo: bitmapInfo) else {
+            return nil
+        }
+        
+        // Перемещаем контекст к нужному пикселю и рисуем изображение
+        context.translateBy(x: CGFloat(-x), y: CGFloat(-y))
+        context.draw(self, in: CGRect(x: 0, y: 0, width: width, height: height))
+        
+        // Извлекаем компоненты цвета
+        let r = CGFloat(pixelData[0]) / 255.0
+        let g = CGFloat(pixelData[1]) / 255.0
+        let b = CGFloat(pixelData[2]) / 255.0
+        let a = CGFloat(pixelData[3]) / 255.0
+        
+        return UIColor(red: r, green: g, blue: b, alpha: a)
     }
 }
 
@@ -142,6 +225,14 @@ extension UIColor {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         getRed(&r, green: &g, blue: &b, alpha: &a)
         return r > threshold && g > threshold && b > threshold
+    }
+    
+    func isLightColor(threshold: CGFloat = 0.7) -> Bool {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        getRed(&r, green: &g, blue: &b, alpha: &a)
+        // Вычисляем яркость по формуле luminance = 0.299*R + 0.587*G + 0.114*B
+        let luminance = 0.299 * r + 0.587 * g + 0.114 * b
+        return luminance > threshold
     }
 }
 

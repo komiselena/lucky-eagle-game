@@ -19,9 +19,9 @@ struct MazeGameView: View {
 
     @State private var scene = MazeGameScene(size: CGSize(width: 196, height: 196))
     @ObservedObject var gameData: GameData
-    @State private var timeLeft = 60
+    @State private var timeLeft = 90
     @State private var timer: Timer?
-    @State private var showWin = false
+    @State private var showWin = true
     @State private var coins = 0
     
     var body: some View {
@@ -52,13 +52,26 @@ struct MazeGameView: View {
                             .frame(width: g.size.width * 1, height: g.size.height * 0.85)
                         VStack{
                             if showWin{
+                                VStack{
                                 Image("Good JOb You made it the finish lne")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: g.size.width * 0.4)
+                                
+                                    Image("Group 10")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.2)
+                                
+                                Image("Take")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.3)
+
+                                }
+                                
 
                             } else{
-//                                SpriteView(scene: scene)
                                 ZStack{
                                     Image("Group 8")
                                         .resizable()
@@ -85,6 +98,7 @@ struct MazeGameView: View {
                                     SpriteView(scene: scene)
                                         .frame(width: g.size.width * 0.2, height: g.size.width * 0.2)
                                         .border(Color.black)
+                                        .padding(.leading, 20)
                                     
                                     VStack (spacing: 0){
                                         Text("TIME: \(timeLeft)")
@@ -126,6 +140,7 @@ struct MazeGameView: View {
                                                 .frame(width: g.size.width * 0.06, height: g.size.width * 0.06)
                                                 .rotationEffect(.degrees(180))
                                         }
+                                        
                                     }
                                     .padding(.leading)
                                 }
@@ -143,6 +158,9 @@ struct MazeGameView: View {
                 scene.onGameWon = {
                     timer?.invalidate()
                     showWin = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        gameData.coins += 20
+                    }
                 }
             }
 
@@ -154,8 +172,8 @@ struct MazeGameView: View {
     }
     
     func resetGame() {
-//        scene.resetGame()
-        timeLeft = 60
+        scene.resetGame()
+        timeLeft = 90
         showWin = false
         startTimer()
     }
