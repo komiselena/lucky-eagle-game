@@ -65,14 +65,14 @@ struct GuessTheNumberView: View {
                                 Image("Bigger")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.4)
+                                    .frame(width: g.size.width * 0.3)
 
 //                                    .scaleEffect(0.7)
                             } else if game.smaller{
                                 Image("Smaller")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.4)
+                                    .frame(width: g.size.width * 0.3)
 
                             }else if game.isWon {
                                 Image("Number guessed")
