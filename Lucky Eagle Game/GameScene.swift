@@ -64,8 +64,17 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
 
 
     func setupEagle() {
-        eagle = SKSpriteNode(imageNamed: gameViewModel?.eagleSkin ?? "eagle1")
-        eagle.setScale(1.8)
+//        eagle = SKSpriteNode(imageNamed: gameViewModel?.eagleSkin ?? "eagle1")
+        let eagleImageName = gameViewModel?.eagleSkin ?? "eagle1"
+            eagle = SKSpriteNode(imageNamed: eagleImageName)
+            eagle.name = eagleImageName
+        if eagle.name == "eagle2" || eagle.name == "eagle3"{
+            eagle.setScale(0.2)
+        } else{
+            eagle.setScale(1.8)
+        }
+        print("eagle.name is \(eagle.name)")
+
         eagle.position = CGPoint(x: size.width / 2, y: size.height / 2)
         eagle.zPosition = 10
 
@@ -202,7 +211,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     }
 
     func reduceHealth() {
-        health -= 0.1
+        health -= 0.05
         print("Оставшееся здоровье: \(health)")
         if health <= 0 {
             print("Game Over Condition Met!")
@@ -214,9 +223,13 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     func gameOver() {
         guard gameViewModel?.isGameOver == false else { return }
         eagle.removeFromParent()
-        gameViewModel?.isGameOver = true
+        DispatchQueue.main.async {
+            self.gameViewModel?.isGameOver = true
+
+        }
         health = 1
         score = 0
+
     }
     
 

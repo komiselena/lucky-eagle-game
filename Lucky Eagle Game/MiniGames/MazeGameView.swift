@@ -45,7 +45,6 @@ struct MazeGameView: View {
                         }
 
                     }
-                    
                     .frame(width: g.size.width)
 
                     ZStack(alignment: .center){
@@ -156,6 +155,8 @@ struct MazeGameView: View {
                     .frame(height: g.size.height * 0.8)
 
                 }
+                .frame(width: g.size.width, height: g.size.height)
+
                 .padding(.bottom, g.size.height * 0.3)
             }
             .onAppear {

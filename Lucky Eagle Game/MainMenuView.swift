@@ -56,7 +56,6 @@ struct MainMenuView: View {
                                     Image("Group 308")
                                         .resizable()
                                         .scaledToFit()
-                                    //                                    .frame(width: g.size.width * 0.2, height: g.size.width * 0.2)
                                     
                                 }
                                 .padding(.top, g.size.height * 0.05)
@@ -82,8 +81,9 @@ struct MainMenuView: View {
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: g.size.width * 0.34)
-                                    
                                 }
+                                
+
                                 
                                 HStack(spacing: 200){
                                     NavigationLink(destination: ShopView(gameViewModel: gameViewModel, gameData: gameData)) {

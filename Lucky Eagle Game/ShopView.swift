@@ -16,8 +16,6 @@ struct ShopView: View {
 
     @State private var selectedTab: Tab = .skins
     @Environment(\.dismiss) private var dismiss
-    @State var boughtSkinId: [Int] = [1]
-    @State var boughtLocId: [Int] = [1]
 
     @ObservedObject var gameViewModel: GameViewModel
 
@@ -124,12 +122,12 @@ struct ShopView: View {
         }
     }
     private func handleSkinButton(id: Int) {
-        if boughtSkinId.contains(id) {
+        if gameData.boughtSkinId.contains(id) {
             gameViewModel.eagleSkin = "eagle\(id)"
         } else {
             if gameData.coins >= 100 {
                 gameData.coins -= 100
-                boughtSkinId.append(id)
+                gameData.boughtSkinId.append(id)
                 gameViewModel.eagleSkin = "eagle\(id)"
             } else {
                 print("Not enough money")
@@ -138,13 +136,13 @@ struct ShopView: View {
     }
     
     private func handleLocationButton(id: Int) {
-        if boughtLocId.contains(id) {
+        if gameData.boughtLocId.contains(id) {
             gameViewModel.backgroundImage = "loc\(id)"
         } else {
             if gameData.coins >= 100 {
                 gameData.coins -= 100
 
-                boughtLocId.append(id)
+                gameData.boughtLocId.append(id)
                 gameViewModel.backgroundImage = "loc\(id)"
             } else {
                 print("Not enough money")
@@ -154,19 +152,15 @@ struct ShopView: View {
     }
     
     private func currentSkinButtonImage(for id: Int) -> String {
-        if gameViewModel.eagleSkin == "eagle\(id)" {
-            return "Use"
-        } else if boughtSkinId.contains(id) {
+        if gameData.boughtSkinId.contains(id) {
             return "Use"
         } else {
             return "100Coins"
         }
     }
-    
+
     private func currentLocButtonImage(for id: Int) -> String {
-        if gameViewModel.backgroundImage == "loc\(id)" {
-            return "Use"
-        } else if boughtLocId.contains(id) {
+        if gameData.boughtLocId.contains(id) {
             return "Use"
         } else {
             return "100Coins"

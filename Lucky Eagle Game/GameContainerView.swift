@@ -9,7 +9,7 @@ import SwiftUI
 import SpriteKit
 
 struct GameContainerView: View {
-    @State private var eagleScene = EagleGameScene(size: CGSize(width: 390, height: 844))
+    @State private var eagleScene = EagleGameScene(size: UIScreen.main.bounds.size)
     @ObservedObject var gameViewModel: GameViewModel
     @ObservedObject var gameData: GameData
 
@@ -19,12 +19,13 @@ struct GameContainerView: View {
         if gameViewModel.isGameOver {
             WinView(gameViewModel: gameViewModel, gameData: gameData)
                 .navigationBarBackButtonHidden()
+                
             } else {
                 GeometryReader { g in
                     ZStack {
-                        
                         SpriteView(scene: eagleScene)
-                            .ignoresSafeArea()
+
+                             .ignoresSafeArea()
                             .environmentObject(gameViewModel)
                         
                         VStack{
@@ -47,6 +48,7 @@ struct GameContainerView: View {
                             
                             HStack {
                                 Button(action: {
+                                    
                                     eagleScene.moveEagle(left: true)
                                 }) {
                                     Image("leftArrow")
@@ -67,19 +69,21 @@ struct GameContainerView: View {
                             }
                             .padding(.horizontal, 30)
                             .padding(.bottom, 20)
-                            .navigationBarBackButtonHidden()
-                            .onAppear {
-                                eagleScene.score = 0
-                                eagleScene.scaleMode = .resizeFill
-                                eagleScene.gameViewModel = gameViewModel
-                                eagleScene.gameData = gameData
-                                
-                            }
                         }
                     }
                 }
+                .onAppear {
+                    let newScene = EagleGameScene(size: UIScreen.main.bounds.size)
+                    newScene.scaleMode = .resizeFill
+                    newScene.gameViewModel = gameViewModel
+                    newScene.gameData = gameData
+                    eagleScene = newScene
+                }
+                .navigationBarBackButtonHidden()
+
         }
     }
+
 }
 
 class GameViewModel: ObservableObject {

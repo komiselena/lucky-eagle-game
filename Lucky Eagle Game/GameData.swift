@@ -10,6 +10,9 @@ import Foundation
 
 class GameData: ObservableObject {
     
+    @Published var boughtSkinId: [Int] = [1]
+    @Published var boughtLocId: [Int] = [1]
+
     @Published var coins: Int {
         didSet {
             UserDefaults.standard.set(coins, forKey: "coins")

@@ -166,7 +166,7 @@ struct MemoryGameView: View {
 
                     }
                 }
-                .frame(height: g.size.height * 0.8)
+                .frame(width: g.size.width, height: g.size.height)
                 .padding(.bottom, g.size.height * 0.3)
             }
             .onAppear(perform: startTimer)
