@@ -398,6 +398,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZR4XR5VH35;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Lucky-Eagle-Game-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Lucky Eagle";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -431,6 +432,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZR4XR5VH35;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Lucky-Eagle-Game-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Lucky Eagle";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.arcade-games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

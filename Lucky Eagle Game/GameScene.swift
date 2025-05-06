@@ -28,14 +28,16 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
 
     var health: CGFloat = 1.0 {
         didSet {
-            
+            updateHealthBar()
         }
     }
-    
+    var isInvulnerable = false
+    let invulnerabilityDuration: TimeInterval = 1.0 // 1 секунда неуязвимости после удара
+
     var lastUpdateTime: TimeInterval = 0
 
     // Уменьшаем частоту появления врагов
-    let enemySpawnInterval: TimeInterval = 2.0 // Было 2.5
+    let enemySpawnInterval: TimeInterval = 2.3 // Было 2.5
     let maxEnemiesOnScreen = 3 // Максимальное количество врагов на экране
 
     // Увеличиваем скорость врагов
@@ -103,6 +105,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         setupInfiniteBackground()
         setupEagle()
         setupScoreDisplay()
+        setupHealthBar()
         startSpawningEnemies()
         startSpawningSmallBirds()
         setupCoinIndicator()
@@ -287,23 +290,9 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         
         
         let baseColor = UIColor.white
-//        let targetColor = UIColor.yellow
-//        let currentColor = blend(color1: baseColor, color2: targetColor, ratio: 1.0 - colorRatio)
-        
         coinIndicator.color = baseColor
     }
     
-//    func blend(color1: UIColor, color2: UIColor, ratio: CGFloat) -> UIColor {
-//        let ratio = max(0, min(1, ratio))
-//        let components1 = color1.cgColor.components ?? [1, 1, 1, 1]
-//        let components2 = color2.cgColor.components ?? [1, 1, 0, 1]
-//        
-//        let r = components1[0] * (1 - ratio) + components2[0] * ratio
-//        let g = components1[1] * (1 - ratio) + components2[1] * ratio
-//        let b = components1[2] * (1 - ratio) + components2[2] * ratio
-//        
-//        return UIColor(red: r, green: g, blue: b, alpha: 1)
-//    }
 
 
     func updateRotation() {
@@ -397,32 +386,14 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         addChild(eagle)
     }
     
-//    func moveEagle(left: Bool, startMoving: Bool) {
-//        if startMoving {
-//            if left {
-//                isMovingLeft = true
-//                isMovingRight = false
-//            } else {
-//                isMovingRight = true
-//                isMovingLeft = false
-//            }
-//        } else {
-//            // Останавливаем движение, если кнопка отпущена
-//            if left {
-//                isMovingLeft = false
-//            } else {
-//                isMovingRight = false
-//            }
-//        }
-//    }
 
     func startSpawningSmallBirds() {
-        let spawn = SKAction.run {
-            self.spawnSmallBird()
+        let spawn = SKAction.run { [weak self] in
+            self?.spawnSmallBird()
         }
-        let wait = SKAction.wait(forDuration: Double.random(in: 5.0...8.0))
+        let wait = SKAction.wait(forDuration: Double.random(in: 4.0...7.0)) // Реже появляются
         let sequence = SKAction.sequence([spawn, wait])
-        run(SKAction.repeatForever(sequence))
+        run(SKAction.repeatForever(sequence), withKey: "smallBirdSpawning")
     }
     
     func spawnSmallBird() {
@@ -430,15 +401,40 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         let randomBirdName = birdNames.randomElement()!
         
         let bird = SKSpriteNode(imageNamed: randomBirdName)
-        bird.name = randomBirdName
+        bird.name = "smallBird" // Унифицированное имя для всех маленьких птичек
         bird.setScale(0.1)
         bird.zPosition = 5
         
-        let fromLeft = Bool.random()
-        let startX = fromLeft ? -50 : size.width + 50
-        let startY = CGFloat.random(in: 100...(size.height - 100))
-        bird.position = CGPoint(x: startX, y: startY)
+        // Случайная стартовая позиция на краю экрана
+        let edge = Int.random(in: 0..<4) // 0: верх, 1: право, 2: низ, 3: лево
+        var startPosition = CGPoint.zero
         
+        switch edge {
+        case 0: // Верх
+            startPosition = CGPoint(
+                x: CGFloat.random(in: -size.width/2...size.width/2),
+                y: size.height/2 + 50
+            )
+        case 1: // Право
+            startPosition = CGPoint(
+                x: size.width/2 + 50,
+                y: CGFloat.random(in: -size.height/2...size.height/2)
+            )
+        case 2: // Низ
+            startPosition = CGPoint(
+                x: CGFloat.random(in: -size.width/2...size.width/2),
+                y: -size.height/2 - 50
+            )
+        default: // Лево
+            startPosition = CGPoint(
+                x: -size.width/2 - 50,
+                y: CGFloat.random(in: -size.height/2...size.height/2)
+            )
+        }
+        
+        bird.position = startPosition
+        
+        // Физическое тело
         bird.physicsBody = SKPhysicsBody(texture: bird.texture!, size: bird.size)
         bird.physicsBody?.categoryBitMask = PhysicsCategory.bird
         bird.physicsBody?.contactTestBitMask = PhysicsCategory.eagle
@@ -447,12 +443,76 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         
         addChild(bird)
         
-        let dx = fromLeft ? CGFloat.random(in: 300...500) : CGFloat.random(in: -500 ... -300)
-        let dy = CGFloat.random(in: -100...100)
+        // Начальное направление - слегка внутрь экрана
+        let inwardDirection = CGPoint(
+            x: -startPosition.x * CGFloat.random(in: 0.1...0.3),
+            y: -startPosition.y * CGFloat.random(in: 0.1...0.3)
+        ).normalized()
         
-        let move = SKAction.moveBy(x: dx, y: dy, duration: 4.0)
-        let remove = SKAction.removeFromParent()
-        bird.run(SKAction.sequence([move, remove]))
+        var currentDirection = CGVector(dx: inwardDirection.x, dy: inwardDirection.y)
+        var lastDirectionChange = 0.0
+        
+        // Анимация полета
+        let flapDuration = 0.2
+        let flapUp = SKAction.scaleY(to: 0.09, duration: flapDuration)
+        let flapDown = SKAction.scaleY(to: 0.11, duration: flapDuration)
+        bird.run(SKAction.repeatForever(SKAction.sequence([flapUp, flapDown])))
+        
+        // Движение птички
+        bird.run(SKAction.repeatForever(SKAction.sequence([
+            SKAction.run { [weak bird, weak self] in
+                guard let bird = bird, let self = self else { return }
+                
+                lastDirectionChange += 1.0/60.0
+                
+                // Меняем направление каждые 1-3 секунды
+                if lastDirectionChange >= Double.random(in: 1.0...3.0) {
+                    lastDirectionChange = 0
+                    
+                    // Новое случайное направление
+                    let randomAngle = CGFloat.random(in: -.pi...(.pi))
+                    currentDirection = CGVector(
+                        dx: cos(randomAngle),
+                        dy: sin(randomAngle)
+                    )
+                }
+                
+                // Плавное изменение направления
+                let interpolationFactor: CGFloat = 0.05
+                let targetX = currentDirection.dx
+                let targetY = currentDirection.dy
+                currentDirection.dx = currentDirection.dx * (1 - interpolationFactor) + targetX * interpolationFactor
+                currentDirection.dy = currentDirection.dy * (1 - interpolationFactor) + targetY * interpolationFactor
+                
+                // Нормализация
+                let length = sqrt(currentDirection.dx * currentDirection.dx + currentDirection.dy * currentDirection.dy)
+                if length > 0 {
+                    currentDirection.dx /= length
+                    currentDirection.dy /= length
+                }
+                
+                // Скорость движения
+                let speed = CGFloat.random(in: 50...100)
+                
+                // Применяем движение
+                bird.position.x += currentDirection.dx * speed * CGFloat(1.0/60.0)
+                bird.position.y += currentDirection.dy * speed * CGFloat(1.0/60.0)
+                
+                // Плавный поворот в направлении движения
+                let targetAngle = atan2(currentDirection.dy, currentDirection.dx)
+                let angleDifference = (targetAngle - bird.zRotation).truncatingRemainder(dividingBy: .pi * 2)
+                let shortestAngle = angleDifference > .pi ? angleDifference - .pi * 2 :
+                                 angleDifference < -.pi ? angleDifference + .pi * 2 : angleDifference
+                
+                bird.zRotation += shortestAngle * 0.1
+                
+                // Удаляем, если улетели далеко за экран
+                if abs(bird.position.x) > self.size.width * 1.5 || abs(bird.position.y) > self.size.height * 1.5 {
+                    bird.removeFromParent()
+                }
+            },
+            SKAction.wait(forDuration: 1.0/60.0)
+        ])))
     }
 
 
@@ -493,46 +553,88 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         cameraNode.addChild(scoreLabel)
     }
     
-//    func setupHealthBar() {
-//        healthBarBackground = SKSpriteNode(color: UIColor.brown, size: CGSize(width: 180, height: 20))
-//        healthBarBackground.position = CGPoint(x: size.width / 2, y: size.height - 90)
-//        healthBarBackground.zPosition = 50
-//        healthBarBackground.cornerRadius = 15
-//        addChild(healthBarBackground)
-//
-//        healthBar = SKSpriteNode(color: UIColor.red, size: CGSize(width: 165, height: 15))
-//        healthBar.anchorPoint = CGPoint(x: 0.0, y: 0.5)
-//        healthBar.position = CGPoint(x: healthBarBackground.position.x - 100, y: healthBarBackground.position.y)
-//        healthBar.zPosition = 51
-//
-//        healthBar.cornerRadius = 15
-//        let heart = SKSpriteNode(imageNamed: "heart")
-//        heart.size = CGSize(width: 30, height: 30)
-//        heart.position = CGPoint(x: healthBarBackground.position.x - healthBarBackground.size.width / 2,
-//                                 y: healthBarBackground.position.y)
-//        heart.zPosition = 52
-//        addChild(healthBar)
-//        addChild(heart)
-//
-//    }
-//
-//    func updateHealthBar() {
-//        let maxWidth: CGFloat = 180
-//        let newWidth = max(0, maxWidth * health)
-//
-//        let resize = SKAction.resize(toWidth: newWidth, duration: 0.3)
-//        healthBar.run(resize)
-//    }
-//
-//    func reduceHealth() {
-//        health -= 0.05
-//        print("Оставшееся здоровье: \(health)")
-//        if health <= 0 {
-//            print("Game Over Condition Met!")
-//            gameOver()
-//            print("gameViewModel?.isGameOver set to true")
-//        }
-//    }
+    func setupHealthBar() {
+        // Создаем контейнер для health bar (для удобства позиционирования)
+        let healthContainer = SKSpriteNode(color: .clear, size: CGSize(width: 200, height: 40))
+        healthContainer.position = CGPoint(x: 0, y: scoreLabel.position.y - 90) // Чуть ниже score
+        healthContainer.zPosition = 1000 // Высокий zPosition, чтобы был поверх всего
+        cameraNode.addChild(healthContainer)
+        
+        // Фон health bar
+        healthBarBackground = SKSpriteNode(color: UIColor(white: 0.4, alpha: 0.6), size: CGSize(width: 180, height: 20))
+        healthBarBackground.position = CGPoint(x: 0, y: scoreLabel.position.y - 90)
+        healthBarBackground.zPosition = 1
+        healthBarBackground.cornerRadius = 10
+        healthContainer.addChild(healthBarBackground)
+
+        // Сам health bar
+        healthBar = SKSpriteNode(color: UIColor.red, size: CGSize(width: 175, height: 15))
+        healthBar.anchorPoint = CGPoint(x: 0.0, y: 0.5)
+        healthBar.position = CGPoint(x: -healthBarBackground.size.width/2 + 2.5, y: scoreLabel.position.y - 90)
+        healthBar.zPosition = 2
+        healthBar.cornerRadius = 7
+        healthContainer.addChild(healthBar)
+
+        // Иконка сердца
+        let heart = SKSpriteNode(imageNamed: "heart")
+        heart.size = CGSize(width: 25, height: 25)
+        heart.position = CGPoint(x: -healthBarBackground.size.width/2 - heart.size.width/2 - 5,
+                                y: scoreLabel.position.y - 90)
+        heart.zPosition = 3
+        healthContainer.addChild(heart)
+        
+        // Добавляем белую рамку для лучшей видимости
+        let border = SKShapeNode(rect: CGRect(x: -healthBarBackground.size.width/2,
+                                             y: -healthBarBackground.size.height/2,
+                                             width: healthBarBackground.size.width,
+                                             height: healthBarBackground.size.height),
+                                cornerRadius: 10)
+        border.strokeColor = .white
+        border.lineWidth = 1.5
+        border.zPosition = 4
+        healthBarBackground.addChild(border)
+    }
+    func updateHealthBar() {
+        let maxWidth: CGFloat = 175
+        let newWidth = max(0, maxWidth * health)
+        
+        
+        // Сначала сбрасываем цвет
+        healthBar.removeAllActions()
+        healthBar.color = .red
+        
+        // Затем анимируем изменение размера
+        healthBar.run(SKAction.resize(toWidth: newWidth, duration: 0.2))
+    }
+    var lastHitTime: TimeInterval = 0
+    let hitCooldown: TimeInterval = 0.5 // Защита от быстрых последовательных ударов
+
+    func reduceHealth() {
+        let now = CACurrentMediaTime()
+        guard now - lastHitTime > hitCooldown else { return }
+        lastHitTime = now
+        
+        health -= 0.05 // Уменьшаем здоровье на 5%
+        
+        // Эффект "мигания" при ударе
+        let flashRed = SKAction.run {
+            self.healthBar.color = .red
+            self.healthBar.colorBlendFactor = 1.0
+        }
+        let restoreColor = SKAction.run {
+            self.updateHealthBar() // Восстанавливаем правильный цвет
+        }
+        
+        healthBar.run(SKAction.sequence([
+            flashRed,
+            SKAction.wait(forDuration: 0.1),
+            restoreColor
+        ]))
+        
+        if health <= 0 {
+            gameOver()
+        }
+    }
 
     func gameOver() {
         guard gameViewModel?.isGameOver == false else { return }
@@ -541,7 +643,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             self.gameViewModel?.isGameOver = true
 
         }
-//        health = 1
+        health = 1
         score = 0
 
     }
@@ -638,9 +740,14 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         bird.physicsBody?.collisionBitMask = 0
         bird.physicsBody?.isDynamic = true
         
-        // Стартовая позиция - не прямо сзади, а сбоку
+        // Выбираем сторону появления (лево или право)
+        let side: CGFloat = Bool.random() ? 1 : -1
+        
+        // Стартовая позиция - сбоку от орла на некотором расстоянии
         let baseAngle = atan2(eagleVelocity.dy, eagleVelocity.dx)
-        let sideAngle = Bool.random() ? baseAngle + .pi/2 : baseAngle - .pi/2
+        let sideAngle = baseAngle + (side * .pi/2) // 90 градусов влево или вправо
+        
+        // Расстояние появления
         let distance = CGFloat.random(in: minEnemyDistance...maxEnemyDistance)
         
         bird.position = CGPoint(
@@ -648,60 +755,90 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             y: eagle.position.y + sin(sideAngle) * distance
         )
         
-        // Фиксированный поворот (птица всегда смотрит вперед по направлению движения)
+        // Начальный поворот
         bird.zRotation = baseAngle - .pi/2
         
         addChild(bird)
         
         // Переменные для управления поведением
-        var currentApproachAngle = CGFloat.random(in: -enemyApproachAngleRange...enemyApproachAngleRange)
+        var currentDirection = CGVector(dx: sin(baseAngle), dy: cos(baseAngle))
+        var targetDirection = currentDirection
         var lastBehaviorUpdate = 0.0
+        var lastDirectionChange = 0.0
+        var currentSpeed = eagleSpeed * enemySpeedMultiplier * CGFloat.random(in: 0.8...1.2)
         
         bird.run(SKAction.repeatForever(SKAction.sequence([
             SKAction.run { [weak self, weak bird] in
                 guard let self = self, let bird = bird else { return }
                 
-                // Обновляем стратегию каждые enemyUpdateInterval секунд
+                // Время с последнего обновления
                 lastBehaviorUpdate += 1.0/60.0
-                if lastBehaviorUpdate >= enemyUpdateInterval {
-                    lastBehaviorUpdate = 0
-                    // Случайно меняем угол подлета
-                    currentApproachAngle = CGFloat.random(in: -enemyApproachAngleRange...enemyApproachAngleRange)
+                lastDirectionChange += 1.0/60.0
+                
+                // Обновляем цель каждые 0.5-1.5 секунды
+                if lastDirectionChange >= Double.random(in: 0.5...1.5) {
+                    lastDirectionChange = 0
+                    
+                    // Рассчитываем базовое направление к игроку
+                    let toPlayer = CGVector(
+                        dx: self.eagle.position.x - bird.position.x,
+                        dy: self.eagle.position.y - bird.position.y
+                    )
+                    
+                    // Нормализуем вектор
+                    let distanceToPlayer = hypot(toPlayer.dx, toPlayer.dy)
+                    let normalizedDirection = CGVector(
+                        dx: toPlayer.dx/distanceToPlayer,
+                        dy: toPlayer.dy/distanceToPlayer
+                    )
+                    
+                    // Добавляем случайное отклонение
+                    let randomAngle = CGFloat.random(in: -.pi/3 ... .pi/3)
+                    targetDirection = CGVector(
+                        dx: normalizedDirection.dx * cos(randomAngle) - normalizedDirection.dy * sin(randomAngle),
+                        dy: normalizedDirection.dx * sin(randomAngle) + normalizedDirection.dy * cos(randomAngle)
+                    )
+                    
+                    // Плавное изменение скорости
+                    currentSpeed = self.eagleSpeed * self.enemySpeedMultiplier * CGFloat.random(in: 0.8...1.2)
                 }
                 
-                // Рассчитываем направление к игроку с учетом угла подлета
-                let toPlayer = CGVector(
-                    dx: self.eagle.position.x - bird.position.x,
-                    dy: self.eagle.position.y - bird.position.y
-                )
+                // Плавное изменение направления (интерполяция)
+                let interpolationFactor: CGFloat = 0.1 // Меньше значение = плавнее поворот
+                currentDirection.dx = currentDirection.dx * (1 - interpolationFactor) + targetDirection.dx * interpolationFactor
+                currentDirection.dy = currentDirection.dy * (1 - interpolationFactor) + targetDirection.dy * interpolationFactor
                 
-                // Нормализуем и поворачиваем вектор для подрезания
-                let distanceToPlayer = hypot(toPlayer.dx, toPlayer.dy)
-                let normalizedDirection = CGVector(
-                    dx: toPlayer.dx/distanceToPlayer,
-                    dy: toPlayer.dy/distanceToPlayer
-                )
-                
-                // Поворачиваем вектор направления для подрезания
-                let approachDirection = CGVector(
-                    dx: normalizedDirection.dx * cos(currentApproachAngle) - normalizedDirection.dy * sin(currentApproachAngle),
-                    dy: normalizedDirection.dx * sin(currentApproachAngle) + normalizedDirection.dy * cos(currentApproachAngle)
-                )
+                // Нормализуем вектор направления
+                let length = sqrt(currentDirection.dx * currentDirection.dx + currentDirection.dy * currentDirection.dy)
+                if length > 0 {
+                    currentDirection.dx /= length
+                    currentDirection.dy /= length
+                }
                 
                 // Применяем движение
-                let birdSpeed = self.eagleSpeed * self.enemySpeedMultiplier
-                bird.position.x += approachDirection.dx * birdSpeed * CGFloat(1.0/60.0)
-                bird.position.y += approachDirection.dy * birdSpeed * CGFloat(1.0/60.0)
+                bird.position.x += currentDirection.dx * currentSpeed * CGFloat(1.0/60.0)
+                bird.position.y += currentDirection.dy * currentSpeed * CGFloat(1.0/60.0)
+                
+                // Плавный поворот птицы в направлении движения
+                let targetAngle = atan2(currentDirection.dy, currentDirection.dx)
+                let angleDifference = (targetAngle - bird.zRotation - .pi/2).truncatingRemainder(dividingBy: .pi * 2)
+                let shortestAngle = angleDifference > .pi ? angleDifference - .pi * 2 :
+                                   angleDifference < -.pi ? angleDifference + .pi * 2 : angleDifference
+                
+                let rotationSpeed: CGFloat = 0.05 // Меньше значение = плавнее поворот
+                bird.zRotation += shortestAngle * rotationSpeed
                 
                 // Удаляем, если слишком далеко от игрока
-                if distanceToPlayer > self.maxEnemyDistance * 2 {
+                let currentDistance = hypot(self.eagle.position.x - bird.position.x,
+                                          self.eagle.position.y - bird.position.y)
+                if currentDistance > self.maxEnemyDistance * 2 {
                     bird.removeFromParent()
                 }
             },
             SKAction.wait(forDuration: 1.0/60.0)
         ])))
     }
-//    func startSpawningCoins() {
+    //    func startSpawningCoins() {
 //        let spawn = SKAction.run {
 //            self.spawnCoin()
 //        }
@@ -724,7 +861,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         if firstBody.categoryBitMask == PhysicsCategory.eagle {
-            if secondBody.node?.name?.contains("smallbird") == true {
+            if secondBody.node?.name == "smallBird" {
                 gameData?.coins += 5
                 scoreLabel.text = "\(gameData?.coins ?? 0)"
                 if secondBody.node?.name == "smallbird2" {
@@ -734,10 +871,12 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         if firstBody.categoryBitMask == PhysicsCategory.eagle &&
-            (secondBody.categoryBitMask == PhysicsCategory.arrow || secondBody.categoryBitMask == PhysicsCategory.enemyBird) {
-//            reduceHealth()
-            secondBody.node?.removeFromParent()
-        }
+               (secondBody.categoryBitMask == PhysicsCategory.arrow ||
+                secondBody.categoryBitMask == PhysicsCategory.enemyBird) {
+                reduceHealth()
+                secondBody.node?.removeFromParent()
+            }
+        
         if firstBody.categoryBitMask == PhysicsCategory.eagle &&
            secondBody.categoryBitMask == PhysicsCategory.coin {
             
@@ -803,5 +942,11 @@ extension CGVector {
     func normalized() -> CGVector {
         let length = sqrt(dx*dx + dy*dy)
         return length > 0 ? CGVector(dx: dx/length, dy: dy/length) : .zero
+    }
+}
+extension CGPoint {
+    func normalized() -> CGPoint {
+        let length = sqrt(x * x + y * y)
+        return length > 0 ? CGPoint(x: x / length, y: y / length) : .zero
     }
 }
