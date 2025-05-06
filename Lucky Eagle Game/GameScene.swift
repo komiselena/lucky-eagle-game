@@ -35,11 +35,11 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     var lastUpdateTime: TimeInterval = 0
 
     // Уменьшаем частоту появления врагов
-    let enemySpawnInterval: TimeInterval = 2.5 // Было 2.5
+    let enemySpawnInterval: TimeInterval = 2.0 // Было 2.5
     let maxEnemiesOnScreen = 3 // Максимальное количество врагов на экране
 
     // Увеличиваем скорость врагов
-    let enemySpeedMultiplier: CGFloat = 2.5 // Было 1.3
+    let enemySpeedMultiplier: CGFloat = 2.0 // Было 1.3
 
     // Новые параметры для поведения врагов
     let enemyApproachAngleRange: CGFloat = .pi/3 // ±60 градусов для подрезания
@@ -648,10 +648,8 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             y: eagle.position.y + sin(sideAngle) * distance
         )
         
-        // Начальный поворот в сторону игрока
-        let initialAngle = atan2(eagle.position.y - bird.position.y,
-                               eagle.position.x - bird.position.x)
-//        bird.zRotation = initialAngle - .pi/2
+        // Фиксированный поворот (птица всегда смотрит вперед по направлению движения)
+        bird.zRotation = baseAngle - .pi/2
         
         addChild(bird)
         
@@ -695,11 +693,6 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
                 bird.position.x += approachDirection.dx * birdSpeed * CGFloat(1.0/60.0)
                 bird.position.y += approachDirection.dy * birdSpeed * CGFloat(1.0/60.0)
                 
-                // Плавный поворот в направлении движения (без вращения вокруг оси)
-                let targetAngle = atan2(approachDirection.dy, approachDirection.dx) - .pi/2
-                let angleDifference = (targetAngle - bird.zRotation + .pi).truncatingRemainder(dividingBy: .pi*2) - .pi
-                bird.zRotation += angleDifference * 0.1
-                
                 // Удаляем, если слишком далеко от игрока
                 if distanceToPlayer > self.maxEnemyDistance * 2 {
                     bird.removeFromParent()
@@ -708,7 +701,6 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             SKAction.wait(forDuration: 1.0/60.0)
         ])))
     }
-
 //    func startSpawningCoins() {
 //        let spawn = SKAction.run {
 //            self.spawnCoin()
