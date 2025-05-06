@@ -140,7 +140,7 @@ struct MemorySequnceGameView: View {
                                             }
                                         }
                                     }
-                                    .frame(height: g.size.height * 0.4)
+                                    .frame(width: g.size.width * 0.7, height: g.size.height * 0.4)
                                 }
                             }
                             Spacer()
