@@ -8,9 +8,10 @@
 import Foundation
 import AVFoundation
 
-class MusicManager {
+class MusicManager: ObservableObject {
     static let shared = MusicManager()
     
+    @Published var audioPlayerVolume: Float = 0.5
     var audioPlayer: AVAudioPlayer?
     
     private init() {}
@@ -24,7 +25,7 @@ class MusicManager {
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.numberOfLoops = -1
-            audioPlayer?.volume = 0.5    
+            audioPlayer?.volume = audioPlayerVolume
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
         } catch {

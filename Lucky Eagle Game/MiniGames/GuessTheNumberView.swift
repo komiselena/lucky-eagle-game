@@ -21,24 +21,10 @@ struct GuessTheNumberView: View {
                     .scaledToFill()
                     .ignoresSafeArea()
                 VStack(spacing: 0){
-                    HStack{
-                        Spacer()
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image("crossButton")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: g.size.width * 0.12)
-                            
-                        }
-
-                    }
-                    .frame(width: g.size.width)
 
                     ZStack(alignment: .center){
                         BackgroundRectangle()
-                            .frame(width: g.size.width * 1, height: g.size.height * 0.85)
+                            .frame(width: g.size.width , height: g.size.height * 0.9)
 
                         
 //                            .scaleEffect(2.8)
@@ -143,12 +129,33 @@ struct GuessTheNumberView: View {
                         }
                         .padding(.top, g.size.height * 0.1)
                     }
+                    .frame(height: g.size.height * 0.8)
+
                 }
-                .frame(width: g.size.width, height: g.size.height)
-                .padding(.bottom, g.size.height * 0.3)
+
+
             }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image("crossButton")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+
+                    }
+                    
+                    
+                }
+
+            }
+            .frame(width: g.size.width, height: g.size.height)
+
+            .navigationBarBackButtonHidden()
+
         }
-        .navigationBarBackButtonHidden()
     }
 }
 

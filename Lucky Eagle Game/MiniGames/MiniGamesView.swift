@@ -17,73 +17,60 @@ struct MiniGamesView: View {
                 Image("bg_main")
                     .resizable()
                     .scaledToFill()
-//                    .frame(width: g.size.width, height: g.size.height)
                     .ignoresSafeArea()
                 
                 VStack(spacing: 0){
-                    HStack{
-                        Spacer()
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image("crossButton")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: g.size.width * 0.1)
-                        }
-                    }
-                    .frame(width: g.size.width * 0.9)
                     
-                    Image("miniGames")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: g.size.width * 0.9)
+                    BackgroundRectangle()
+                        .frame(width: g.size.width , height: g.size.height * 0.9)
+
                     
                         .overlay(
-                            ZStack{
-                                Image("rec")
+                            VStack{
+                                Image("Mini games")
                                     .resizable()
-                                    .frame(width: g.size.width * 0.7, height: g.size.height * 0.45)
-                                    .padding(.top, 10)
-                                
-                                VStack(spacing: g.size.width * 0.05){
-                                    HStack(spacing: g.size.width * 0.07){
-                                        
-                                        // Мини-игра: "Угадай число"
-                                        NavigationLink {
-                                            GuessTheNumberView(gameData: gameData)
-                                        } label: {
-                                            Image("achieve")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: g.size.width * 0.23)
-
-                                        }
-
-                                        
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.3)
+                                    .padding(.bottom)
+                                    
+                                    VStack(spacing: g.size.width * 0.05){
+                                        HStack(spacing: g.size.width * 0.07){
+                                            
+                                            // Мини-игра: "Угадай число"
+                                            NavigationLink {
+                                                GuessTheNumberView(gameData: gameData)
+                                            } label: {
+                                                Image("achieve")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.3)
+                                                
+                                            }
+                                            
+                                            
                                             // "Найди пару"
-                                        NavigationLink {
-                                            MemoryGameView(gameData: gameData)
-                                        } label: {
-                                            Image("achieve")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: g.size.width * 0.23)
+                                            NavigationLink {
+                                                MemoryGameView(gameData: gameData)
+                                            } label: {
+                                                Image("achieve")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.3)
 
+                                            }
+                                            
                                         }
+                                        HStack(spacing: g.size.width * 0.07){
+                                            NavigationLink {
+                                                MemorySequnceGameView(gameData: gameData)
+                                            } label: {
+                                                Image("achieve")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.3)
 
-                                    }
-                                    HStack(spacing: g.size.width * 0.07){
-                                        NavigationLink {
-                                            MemorySequnceGameView(gameData: gameData)
-                                        } label: {
-                                            Image("achieve")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: g.size.width * 0.23)
-
-                                        }
-
+                                            }
+                                            
                                             // "Лабиринт"
                                             NavigationLink {
                                                 MazeGameView(gameData: gameData)
@@ -91,23 +78,40 @@ struct MiniGamesView: View {
                                                 Image("achieve")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: g.size.width * 0.23)
+                                                    .frame(width: g.size.width * 0.3)
 
                                             }
-
-                                    }
-                                    
+                                            
+                                        }
+                                        
                                 }
                             }
-                                .padding(.top, g.size.height * 0.1)
-                            //                        ,alignment: .bottom
+                                .frame(height: g.size.height * 0.6)
                             
                         )
                     
                 }
-                .padding(.bottom, g.size.height * 0.3)
+
 
             }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image("crossButton")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+
+                    }
+                    
+                    
+                }
+
+            }
+            .frame(width: g.size.width, height: g.size.height)
+
             .navigationBarBackButtonHidden()
             
         }

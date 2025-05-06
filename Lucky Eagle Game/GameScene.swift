@@ -11,6 +11,12 @@ import GameplayKit
 
 class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     
+    var backgroundTiles = [SKSpriteNode]()
+    let tileSize = CGSize(width: 1024, height: 1024) // Размер одного тайла фона
+    var lastCameraPosition = CGPoint.zero
+    var loadedTilePositions = Set<CGPoint>() // Для отслеживания уже загруженных тайлов
+    var backgroundTexture: SKTexture!
+    
     var gameViewModel: GameViewModel?
     var gameData: GameData?
 
@@ -37,7 +43,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     var lastUpdateTime: TimeInterval = 0
 
     // Уменьшаем частоту появления врагов
-    let enemySpawnInterval: TimeInterval = 2.3 // Было 2.5
+    let enemySpawnInterval: TimeInterval = 2.4 // Было 2.5
     let maxEnemiesOnScreen = 3 // Максимальное количество врагов на экране
 
     // Увеличиваем скорость врагов
@@ -60,7 +66,7 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
     
     // Настройки движения и камеры
     let cameraNode = SKCameraNode()
-    let eagleSpeed: CGFloat = 150
+    let eagleSpeed: CGFloat = 100
     var eagleVelocity: CGVector = .zero
     var eagleRotation: CGFloat = 0
     
@@ -85,7 +91,15 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
 
 
     override func didMove(to view: SKView) {
-        backgroundColor = .clear // Прозрачный фон, чтобы был виден только наш background
+        backgroundColor = .clear
+        physicsWorld.gravity = .zero
+        physicsWorld.contactDelegate = self
+        
+        // Загружаем текстуру фона один раз
+        backgroundTexture = SKTexture(imageNamed: gameViewModel?.backgroundImage ?? "loc1")
+        backgroundTexture.filteringMode = .linear // Для плавности
+        
+        setupInfiniteSeamlessBackground()
         physicsWorld.speed = 1.0
 //        physicsWorld.timeStep = 1.0/60.0  // Фиксированный шаг физики
 
@@ -102,7 +116,6 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         addChild(cameraNode)
         camera = cameraNode
         
-        setupInfiniteBackground()
         setupEagle()
         setupScoreDisplay()
         setupHealthBar()
@@ -110,6 +123,79 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
         startSpawningSmallBirds()
         setupCoinIndicator()
 
+    }
+    
+
+    func setupInfiniteSeamlessBackground() {
+        // Удаляем старые тайлы если есть
+        backgroundTiles.forEach { $0.removeFromParent() }
+        backgroundTiles.removeAll()
+        loadedTilePositions.removeAll()
+        
+        // Создаем начальные тайлы
+        updateSeamlessBackground()
+    }
+
+    func updateSeamlessBackground() {
+        let cameraTileX = Int(round(cameraNode.position.x / tileSize.width))
+        let cameraTileY = Int(round(cameraNode.position.y / tileSize.height))
+        
+        // Определяем область 3x3 тайла вокруг камеры
+        let loadRadius = 1
+        var tilesToKeep = Set<CGPoint>()
+        
+        for x in (cameraTileX - loadRadius)...(cameraTileX + loadRadius) {
+            for y in (cameraTileY - loadRadius)...(cameraTileY + loadRadius) {
+                let tilePos = CGPoint(x: x, y: y)
+                tilesToKeep.insert(tilePos)
+                
+                if !loadedTilePositions.contains(tilePos) {
+                    addSeamlessTile(at: tilePos)
+                    loadedTilePositions.insert(tilePos)
+                }
+            }
+        }
+        
+        // Удаляем тайлы вне области видимости
+        var tilesToRemove = [SKSpriteNode]()
+        for tile in backgroundTiles {
+            let tileX = Int(round(tile.position.x / tileSize.width))
+            let tileY = Int(round(tile.position.y / tileSize.height))
+            let tilePos = CGPoint(x: tileX, y: tileY)
+            
+            if !tilesToKeep.contains(tilePos) {
+                tilesToRemove.append(tile)
+                loadedTilePositions.remove(tilePos)
+            }
+        }
+        
+        tilesToRemove.forEach { $0.removeFromParent() }
+        backgroundTiles.removeAll(where: { tilesToRemove.contains($0) })
+    }
+
+    func addSeamlessTile(at tilePos: CGPoint) {
+        let tile = SKSpriteNode(texture: backgroundTexture)
+        tile.name = "backgroundTile"
+        tile.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        tile.position = CGPoint(
+            x: tilePos.x * tileSize.width,
+            y: tilePos.y * tileSize.height
+        )
+        tile.size = tileSize
+        tile.zPosition = -100
+        
+        // Ключевое изменение - делаем текстуру немного больше тайла
+        let textureScale: CGFloat = 1.02 // 2% увеличение
+        let textureRect = CGRect(
+            x: 0.5 - 0.5/textureScale,
+            y: 0.5 - 0.5/textureScale,
+            width: 1/textureScale,
+            height: 1/textureScale
+        )
+        tile.texture = SKTexture(rect: textureRect, in: backgroundTexture)
+        
+        addChild(tile)
+        backgroundTiles.append(tile)
     }
     
     func setupCoinIndicator() {
@@ -230,11 +316,46 @@ class EagleGameScene: SKScene, SKPhysicsContactDelegate {
             spawnStaticCoin()
         }
 
+        let cameraMovement = hypot(cameraNode.position.x - lastCameraPosition.x,
+                                 cameraNode.position.y - lastCameraPosition.y)
+        if cameraMovement > tileSize.width * 0.3 {
+            updateSeamlessBackground()
+            lastCameraPosition = cameraNode.position
+        }
+
         
         updateRotation()
         updateEaglePosition()
         updateCameraAndBackground()
     }
+    
+    func addBackgroundTile(at tilePos: CGPoint) {
+        let texture = SKTexture(imageNamed: gameViewModel?.backgroundImage ?? "loc1")
+        texture.filteringMode = .linear // Для плавности
+        
+        let background = SKSpriteNode(texture: texture)
+        background.name = "backgroundTile"
+        background.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        background.position = CGPoint(
+            x: tilePos.x * tileSize.width,
+            y: tilePos.y * tileSize.height
+        )
+        background.size = tileSize
+        background.zPosition = -100
+        
+        // Добавляем небольшое смещение текстуры для разных тайлов
+        let offsetX = CGFloat(Int(tilePos.x) % 2) * 0.5
+        let offsetY = CGFloat(Int(tilePos.y) % 2) * 0.5
+        
+        // Создаем новую текстуру с учетом смещения
+        let textureRect = CGRect(x: offsetX, y: offsetY, width: 0.5, height: 0.5)
+        background.texture = SKTexture(rect: textureRect, in: texture)
+        
+        addChild(background)
+        backgroundTiles.append(background)
+    }
+    
+
 
     func updateEaglePosition(deltaTime: TimeInterval) {
         guard eagle != nil else { return }

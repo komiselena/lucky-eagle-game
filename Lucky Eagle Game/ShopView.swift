@@ -66,10 +66,10 @@ struct ShopView: View {
                     
                     
                     if selectedTab == .skins {
+                        
                         Image("eagleSkin")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: g.size.width * 0.8)
                             .overlay (
                                 HStack(spacing: g.size.width * 0.07){
                                     ForEach(1..<5, id: \.self){ id in
@@ -84,15 +84,15 @@ struct ShopView: View {
 
                                     }
                                 }
-                                    .padding(.bottom, 20)
+                                    .padding(.bottom)
                                 ,alignment: .bottom
                             )
-                        
+                            .frame(width: g.size.width * 0.8, height: g.size.height * 0.88)
+
                     } else {
                         Image("desertLocation")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: g.size.width * 0.8)
                             .overlay (
                                 HStack(spacing: g.size.width * 0.07){
                                     ForEach(1..<5, id: \.self){ id in
@@ -107,9 +107,11 @@ struct ShopView: View {
 
                                     }
                                 }
-                                    .padding(.bottom, 20)
+                                    .padding(.bottom)
                                 ,alignment: .bottom
                             )
+                            .frame(width: g.size.width * 0.8, height: g.size.height * 0.8)
+
 
                     }
                     
